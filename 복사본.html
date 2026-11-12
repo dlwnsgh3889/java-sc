@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>캠퍼스 라이프 어시스턴트</title>
-  <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -13,22 +13,54 @@
       <div><span id="classStatus" class="status">현재 A반 정보를 보고 있어요.</span><div class="class-switch"><button class="light active" data-class="A">A반</button><button class="light" data-class="B">B반</button></div></div>
     </div>
   </header>
-  <main>
+  <main id="mainArea">
     <section>
-      <article class="card"><h2>📅 <span id="classTitle">A반</span> 이번 학기 시간표</h2><p id="classNote" class="class-note"></p><div class="timetable-container"><table id="timetable"></table></div></article>
-      <article class="card"><h2>📢 학교 공지 요약</h2><ul><li><span>[학사] 겨울계절학기 수강신청 안내</span><span class="muted">11/08</span></li><li><span>[장학] 국가장학금 1차 신청 기간</span><span class="muted">11/05</span></li><li><span>[수업] 팀 프로젝트 중간 점검 안내</span><span class="badge">NEW</span></li></ul></article>
-      <article class="card"><div class="meal-head"><h2 style="margin:0;border:0;padding:0">🍴 오늘의 학식</h2><span class="muted">학생회관 식당</span></div><div class="meal-tabs"><button class="meal-tab active" data-meal="breakfast">조식</button><button class="meal-tab" data-meal="lunch">중식</button><button class="meal-tab" data-meal="dinner">석식</button></div><div id="mealPanel" class="meal-panel"></div><a class="button outline meal-link" href="https://play.google.com/store/apps/details?id=com.ourhome.fsmobileticket" target="_blank" rel="noopener">Meal Care 앱에서 메뉴 확인하기 ↗</a><p class="muted" style="margin:10px 0 0">표시 메뉴는 화면 시연용 예시입니다. 실제 메뉴·알레르기 정보는 Meal Care에서 확인하세요.</p></article>
+      <article class="card" data-tabs="main timetable"><h2>📅 <span id="classTitle">A반</span> 이번 학기 시간표</h2><p id="classNote" class="class-note"></p><div class="timetable-container"><table id="timetable"></table></div></article>
+      <article class="card" data-tabs="main notice"><h2>📢 학교 공지 요약</h2><ul><li><span>[학사] 겨울계절학기 수강신청 안내</span><span class="muted">11/08</span></li><li><span>[장학] 국가장학금 1차 신청 기간</span><span class="muted">11/05</span></li><li><span>[수업] 팀 프로젝트 중간 점검 안내</span><span class="badge">NEW</span></li></ul></article>
+      <article class="card" data-tabs="main etc"><div class="meal-head"><h2 class="meal-title">🍴 오늘의 학식</h2><span class="muted">학생회관 식당</span></div><div class="meal-tabs"><button class="meal-tab active" data-meal="breakfast">조식</button><button class="meal-tab" data-meal="lunch">중식</button><button class="meal-tab" data-meal="dinner">석식</button></div><div id="mealPanel" class="meal-panel"></div><a class="button outline meal-link" href="https://play.google.com/store/apps/details?id=com.ourhome.fsmobileticket" target="_blank" rel="noopener">Meal Care 앱에서 메뉴 확인하기 ↗</a><p class="muted meal-note">표시 메뉴는 화면 시연용 예시입니다. 실제 메뉴·알레르기 정보는 Meal Care에서 확인하세요.</p></article>
     </section>
     <aside>
-      <article class="card"><h2>🔥 <span id="assignmentTitle">A반</span> 과제 마감일</h2><ul id="assignmentList"></ul></article>
-      <article class="card"><h2>❓ 자주 묻는 질문</h2><button class="faq-q">공지사항은 어떻게 보나요? <span>⌄</span></button><div class="faq-a">중요 공지와 새 자료를 한 화면에서 확인할 수 있습니다.</div><button class="faq-q">학식 메뉴는 어디서 확인하나요? <span>⌄</span></button><div class="faq-a">조식·중식·석식 탭으로 확인하고, Meal Care 앱에서 실제 최신 메뉴를 확인할 수 있습니다.</div></article>
-      <article class="card"><h2>💬 서비스 피드백</h2><form id="feedbackForm"><label for="email">이메일</label><input id="email" type="email" placeholder="example@univ.ac.kr" required><label for="message">의견</label><textarea id="message" rows="4" placeholder="개선 의견을 적어주세요." required></textarea><button class="primary" type="submit" style="width:100%;margin-top:14px">제출하기</button></form></article>
+      <article class="card" data-tabs="main task"><h2>🔥 <span id="assignmentTitle">A반</span> 과제 마감일</h2><ul id="assignmentList"></ul></article>
+      <article class="card" data-tabs="etc"><h2>❓ 자주 묻는 질문</h2><button class="faq-q">공지사항은 어떻게 보나요? <span>⌄</span></button><div class="faq-a">중요 공지와 새 자료를 한 화면에서 확인할 수 있습니다.</div><button class="faq-q">학식 메뉴는 어디서 확인하나요? <span>⌄</span></button><div class="faq-a">조식·중식·석식 탭으로 확인하고, Meal Care 앱에서 실제 최신 메뉴를 확인할 수 있습니다.</div></article>
+      <article class="card" data-tabs="etc"><h2>💬 서비스 피드백</h2><form id="feedbackForm"><label for="email">이메일</label><input id="email" type="email" placeholder="example@univ.ac.kr" required><label for="message">의견</label><textarea id="message" rows="4" placeholder="개선 의견을 적어주세요." required></textarea><button class="primary feedback-submit" type="submit">제출하기</button></form></article>
     </aside>
   </main>
-  <script src="data.js"></script>
-  <script src="schedule.js"></script>
-  <script src="menu.js"></script>
-  <script src="feedback.js"></script>
-  <script src="app.js"></script>
+
+  <!-- 하단 탭바 -->
+  <nav id="bottomNav">
+    <div class="nav-inner">
+      <button type="button" data-tab="main"><span class="ico">🏠</span>메인</button>
+      <button type="button" data-tab="notice"><span class="ico">📢</span>공지</button>
+      <button type="button" data-tab="timetable"><span class="ico">📅</span>시간표</button>
+      <button type="button" data-tab="task"><span class="ico">🔥</span>과제</button>
+      <button type="button" data-tab="etc"><span class="ico">⋯</span>기타</button>
+    </div>
+  </nav>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/class-schedule.js"></script>
+  <script src="assets/js/meal-menu.js"></script>
+  <script src="assets/js/faq-feedback.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    // 하단 탭 전환: 각 카드의 data-tabs에 적힌 탭에서만 표시
+    (function () {
+      const nav = document.getElementById('bottomNav');
+      const mainArea = document.getElementById('mainArea');
+      const cards = document.querySelectorAll('#mainArea .card');
+      function select(tab) {
+        cards.forEach(c => { c.classList.toggle('hidden', !c.dataset.tabs.split(' ').includes(tab)); });
+        mainArea.classList.toggle('single', tab !== 'main');
+        nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        localStorage.setItem('lastTab', tab);
+        window.scrollTo({ top: 0 });
+      }
+      nav.addEventListener('click', e => {
+        const b = e.target.closest('button[data-tab]');
+        if (b) select(b.dataset.tab);
+      });
+      select(localStorage.getItem('lastTab') || 'main');
+    })();
+  </script>
 </body>
 </html>
