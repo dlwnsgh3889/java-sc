@@ -289,3 +289,75 @@ textarea {
         justify-content: space-between
     }
 }
+
+/* ===== 하단 탭바 ===== */
+body {
+    padding-bottom: 78px;
+}
+
+#bottomNav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, .08);
+}
+
+#bottomNav .nav-inner {
+    display: flex;
+    width: 100%;
+    max-width: 640px;
+}
+
+#bottomNav button {
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 0;
+    background: #fff;
+    color: var(--muted);
+    padding: 9px 4px 11px;
+    font-size: .78rem;
+    border-top: 3px solid transparent;
+}
+
+#bottomNav button .ico {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+#bottomNav button.active {
+    color: var(--navy);
+    border-top-color: var(--blue);
+    background: #f3f8fe;
+}
+
+main.single {
+    grid-template-columns: 1fr;
+    max-width: 760px;
+}
+
+/* ===== 인라인 style 이전 ===== */
+.meal-title {
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+
+.meal-note {
+    margin: 10px 0 0;
+}
+
+.feedback-submit {
+    width: 100%;
+    margin-top: 14px;
+}
+
+.card.hidden {
+    display: none;
+}
