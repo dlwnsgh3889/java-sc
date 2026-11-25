@@ -7,192 +7,191 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="setupOverlay" class="setup-overlay hidden">
+    <div class="setup-card">
+      <button type="button" id="closeSetupBtn" class="setup-close-btn" aria-label="닫기">✕</button>
+      <h2 id="setupTitle">🎓 캠퍼스 라이프 어시스턴트</h2>
+      <p id="setupDesc" class="muted">시작하기 전에 학과, 학년, 반을 선택해 주세요.</p>
+      <form id="setupForm">
+        <div class="form-group">
+          <label for="selectDept">학과</label>
+          <select id="selectDept" required>
+            <option value="스마트소프트웨어학과">스마트소프트웨어학과</option>
+            <option value="스마트기계공학과">스마트기계공학과</option>
+            <option value="스마트전기전자공학과">스마트전기전자공학과</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="selectGrade">학년</label>
+          <select id="selectGrade" required>
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="selectClass">반</label>
+          <select id="selectClass" required>
+            <option value="A">A반</option>
+            <option value="B">B반</option>
+          </select>
+        </div>
+        <button type="submit" class="primary setup-submit-btn">대시보드 시작하기</button>
+      </form>
+    </div>
+  </div>
 
-  <!-- ================= 상단 헤더 ================= -->
   <header>
     <div class="top">
       <div>
         <h1>🎓 캠퍼스 라이프 어시스턴트</h1>
         <p class="subtitle">수업, 공지, 과제와 학식을 한 화면에서 확인하세요.</p>
       </div>
-
-      <!-- 우측: 오늘의 날씨 버튼 + 반 전환 컨트롤 -->
       <div class="header-controls">
-        <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="weather-pill" title="클릭하여 구글에서 상세 날씨 보기">
+        <a href="https://naver.com" target="_blank" rel="noopener noreferrer" class="weather-pill">
           <span class="w-ico">🌤️</span>
           <div class="w-info">
             <span class="w-temp">진주 13°C · 맑음</span>
             <span class="w-desc">미세먼지 좋음 · 상세보기 ↗</span>
           </div>
         </a>
-
         <div>
           <span id="classStatus" class="status">현재 A반 정보를 보고 있어요.</span>
           <div class="class-switch">
             <button type="button" class="light active" data-class="A">A반</button>
             <button type="button" class="light" data-class="B">B반</button>
+            <button type="button" class="light" id="openSetupBtn">⚙️ 소속 변경</button>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- ================= 메인 콘텐츠 ================= -->
   <main id="mainContainer">
-
-    <!-- 좌측 열 -->
-    <div class="col-left">
-
-      <!-- 1. [메인 탭 전용] 오늘 시간표 카드 -->
+    <div class="left-col">
       <section class="card" data-tab="main">
-        <h2>
-          📅 <span class="class-title-text">A반</span> 오늘의 시간표
-          <span id="todayDayBadge" class="muted today-day-badge"></span>
-        </h2>
+        <h2>📅 <span class="class-title-text">A반</span> 오늘의 시간표 <span id="todayDayBadge" class="today-day-badge muted"></span></h2>
         <div id="todayTimetable" class="today-horizontal-list"></div>
       </section>
 
-      <!-- 2. [시간표 탭 전용] 이번 학기 전체 시간표 카드 -->
       <section class="card hidden" data-tab="schedule">
         <h2>📅 <span id="classTitle">A반</span> 이번 학기 시간표</h2>
         <p id="classNote" class="class-note"></p>
         <table id="timetable"></table>
       </section>
 
-      <!-- 3. 학교 공지 & 학과 공지 가로 나란히 배치 영역 -->
       <div class="notice-split-row">
-        <!-- 3-1. 학교 공지 카드 -->
         <section class="card" data-tab="main notice">
-          <h2>
-            <a id="schoolNoticeHeading" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="heading-link" title="연암공과대학교 공지사항으로 이동">📢 학교 공지 요약</a>
-          </h2>
-          <ul id="noticeList">
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>[학사] 겨울계절학기 수강신청 안내</span>
-                <span class="muted">11/08</span>
-              </a>
-            </li>
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>[장학] 국가장학금 1차 신청 기간</span>
-                <span class="muted">11/05</span>
-              </a>
-            </li>
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>[수업] 팀 프로젝트 중간 점검 안내</span>
-                <span class="badge">NEW</span>
-              </a>
-            </li>
+          <h2><a id="schoolNoticeHeading" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="heading-link">📢 학교 공지 요약</a></h2>
+          <ul>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>[학사] 겨울계절학기 수강신청 안내</span><span class="muted">11/08</span></a></li>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>[장학] 국가장학금 1차 신청 기간</span><span class="muted">11/05</span></a></li>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>[수업] 팀 프로젝트 중간 점검 안내</span><span class="badge">NEW</span></a></li>
           </ul>
-          <a id="noticeMoreBtn" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="button outline notice-more-link">연암공과대학교 공지사항 바로가기 ↗</a>
+          <a id="noticeMoreBtn" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="button outline notice-more-link" style="display: none;">연암공과대학교 공지사항 바로가기 ↗</a>
         </section>
 
-        <!-- 3-2. 학과 공지 카드 -->
         <section class="card" data-tab="main notice">
-          <h2>
-            <a id="deptNoticeHeading" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="heading-link" title="학과 공지사항으로 이동">📌 학과 공지 요약</a>
-          </h2>
-          <ul id="deptNoticeList">
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>2026학년도 「LG DAY」 안내</span>
-                <span class="badge">NEW</span>
-              </a>
-            </li>
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>2026학년도 2학기 조기취업자 제출 서류 안내</span>
-                <span class="muted">10/26</span>
-              </a>
-            </li>
-            <li>
-              <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link">
-                <span>2026-2학기 중간고사 시험 시간표 안내</span>
-                <span class="muted">10/21</span>
-              </a>
-            </li>
+          <h2><a id="deptNoticeHeading" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="heading-link">📌 학과 공지 요약</a></h2>
+          <ul>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>2026학년도 「LG DAY」 안내</span><span class="badge">NEW</span></a></li>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>2026학년도 2학기 조기취업자 제출 서류 안내</span><span class="muted">10/26</span></a></li>
+            <li><a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="notice-row-link"><span>2026-2학기 중간고사 시험 시간표 안내</span><span class="muted">10/21</span></a></li>
           </ul>
-          <a id="deptNoticeMoreBtn" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="button outline notice-more-link">학과 공지사항 바로가기 ↗</a>
+          <a id="deptNoticeMoreBtn" href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="button outline notice-more-link" style="display: none;">학과 공지사항 바로가기 ↗</a>
         </section>
       </div>
 
-      <!-- 4. 오늘의 학식 카드 -->
       <section class="card" data-tab="main">
         <div class="meal-head">
-          <h2 class="meal-title">🍴 오늘의 학식</h2>
-          <span class="muted">학생회관 식당</span>
+          <div>
+            <h2 class="meal-title">🍴 오늘의 학식</h2>
+            <p class="muted" style="margin: 4px 0 0;">학생회관 식당</p>
+          </div>
+          <div class="meal-tabs">
+            <button type="button" class="meal-tab active" data-meal="breakfast">조식</button>
+            <button type="button" class="meal-tab" data-meal="lunch">중식</button>
+            <button type="button" class="meal-tab" data-meal="dinner">석식</button>
+          </div>
         </div>
-
-        <div class="meal-tabs">
-          <button type="button" class="meal-tab active" data-meal="breakfast">조식</button>
-          <button type="button" class="meal-tab" data-meal="lunch">중식</button>
-          <button type="button" class="meal-tab" data-meal="dinner">석식</button>
-        </div>
-
         <div id="mealPanel" class="meal-panel meal-panel-spaced"></div>
-        <a href="#" class="button outline meal-link">Meal Care 앱에서 메뉴 확인하기 ↗</a>
+        <a href="https://yc.ac.kr" target="_blank" rel="noopener noreferrer" class="button outline meal-link">Meal Care 앱에서 메뉴 확인하기 ↗</a>
         <p class="muted meal-note">표시 메뉴는 화면 시연용 예시입니다. 실제 메뉴·알레르기 정보는 Meal Care에서 확인하세요.</p>
       </section>
-
     </div>
 
-    <!-- 우측 열 -->
-    <div class="col-right">
-
-      <!-- 5. 과제 마감일 카드 -->
+    <div class="right-col">
       <section class="card" data-tab="main assignment">
         <h2>🔥 <span id="assignmentTitle">A반</span> 과제 마감일</h2>
         <ul id="assignmentList"></ul>
       </section>
 
-      <!-- 6. 인기 교수님 랭킹 카드 -->
-      <section class="card" data-tab="main etc">
-        <h2>🏆 <span class="class-title-text">A반</span> 인기 교수님 랭킹</h2>
+      <section class="card" data-tab="main">
+        <h2>🏆 <span class="dept-title-text">스마트소프트웨어학과</span> 인기 교수님 랭킹</h2>
         <ul id="professorRankingList"></ul>
       </section>
 
-      <!-- 7. [신규] 대한민국 주요 이슈 뉴스 카드 -->
       <section class="card" data-tab="main">
-        <div class="meal-head">
-          <h2 class="meal-title">📰 대한민국 주요 이슈 뉴스</h2>
+        <div class="meal-head" style="margin-bottom: 10px;">
+          <h2 style="margin: 0; border: 0; padding: 0;">📰 대한민국 주요 이슈 뉴스</h2>
           <span class="badge news-live-badge">HOT</span>
         </div>
         <ul id="koreaNewsList"></ul>
         <a href="https://naver.com" target="_blank" rel="noopener noreferrer" class="button outline notice-more-link">실시간 주요 뉴스 더보기 ↗</a>
       </section>
 
-    </div>
+      <section class="card hidden" data-tab="prof">
+        <h2>🏆 <span class="dept-title-text">스마트소프트웨어학과</span> 교수님 실시간 랭킹 (TOP 3)</h2>
+        <p class="muted" style="margin: -6px 0 12px;">학생들의 별점과 의견이 실시간으로 반영된 1~3위 순위입니다.</p>
+        <ul id="etcProfessorRankingList"></ul>
+      </section>
 
+      <section class="card hidden" data-tab="prof">
+        <h2>⭐ 교수님 별점 · 의견 남기기</h2>
+        <form id="profRatingForm" class="rating-form">
+          <div class="form-group">
+            <label for="ratingProfSelect">교수님 및 과목 선택</label>
+            <select id="ratingProfSelect" required></select>
+          </div>
+          <div class="form-group">
+            <label>별점 선택</label>
+            <div class="star-picker" id="starPicker" role="radiogroup" aria-label="별점 선택">
+              <button type="button" class="star-btn active" data-star="1">★</button>
+              <button type="button" class="star-btn active" data-star="2">★</button>
+              <button type="button" class="star-btn active" data-star="3">★</button>
+              <button type="button" class="star-btn active" data-star="4">★</button>
+              <button type="button" class="star-btn active" data-star="5">★</button>
+              <span id="starScoreLabel" class="star-score-label">5.0점</span>
+            </div>
+            <input type="hidden" id="ratingStarValue" value="5" />
+          </div>
+          <div class="form-group">
+            <label for="ratingCommentInput">한줄 의견</label>
+            <input type="text" id="ratingCommentInput" placeholder="예: 실습 설명이 이해하기 쉽고 피드백이 빨라요!" maxlength="60" required />
+          </div>
+          <button type="submit" class="primary">별점 및 의견 등록하기</button>
+        </form>
+        <div class="recent-reviews-box">
+          <h3>💬 최근 등록된 학생 의견</h3>
+          <ul id="profReviewList"></ul>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <!-- ================= 하단 네비게이션 ================= -->
   <nav id="bottomNav">
     <div class="nav-inner">
-      <button type="button" class="active" data-target="main">
-        <span class="ico">🏠</span>메인
-      </button>
-      <button type="button" class="notice-btn" data-target="notice">
-        <span class="ico">📢</span>공지
-      </button>
-      <button type="button" data-target="schedule">
-        <span class="ico">📅</span>시간표
-      </button>
-      <button type="button" class="assignment-btn" data-target="assignment">
-        <span class="ico">🔥</span>과제
-      </button>
-      <button type="button" data-target="etc">
-        <span class="ico">⋯</span>기타
-      </button>
+      <button type="button" class="active" data-target="main"><span class="ico">🏠</span><span>메인</span></button>
+      <button type="button" data-target="notice"><span class="ico">📢</span><span>공지</span></button>
+      <button type="button" data-target="schedule"><span class="ico">📅</span><span>시간표</span></button>
+      <button type="button" data-target="assignment"><span class="ico">🔥</span><span>과제</span></button>
+      <button type="button" data-target="prof"><span class="ico">🏆</span><span>교수랭킹</span></button>
     </div>
   </nav>
 
-  <!-- ================= 스크립트 연결 ================= -->
   <script src="data.js"></script>
   <script src="schedule.js"></script>
-  <script src="meal.js"></script>
+  <script src="feedback.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
