@@ -53,19 +53,56 @@ function initializeUserSetup() {
   const submitBtn = form?.querySelector('button[type="submit"]');
 
   let currentProfile = { dept: '스마트소프트웨어학과', grade: '1', className: 'A' };
+
+  // 2년제 학과는 3학년 선택을 막고, 심화과정이 있는 학과만 '심화' 표시
+  const deptSelect = document.getElementById('selectDept');
+  const gradeSelect = document.getElementById('selectGrade');
+  function syncGradeOptions() {
+    if (!deptSelect || !gradeSelect) return;
+    const deptOpt = deptSelect.selectedOptions[0];
+    const years = Number(deptOpt?.dataset.years || 3);
+    const hasAdvanced = deptOpt?.dataset.advanced === 'true';
+    Array.from(gradeSelect.options).forEach((opt) => {
+      const allowed = opt.value === '심화' ? hasAdvanced : Number(opt.value) <= years;
+      opt.disabled = !allowed;
+      opt.hidden = !allowed;
+    });
+    if (gradeSelect.selectedOptions[0]?.disabled) gradeSelect.value = String(years);
+  }
+
+  // 학과·학년에 맞게 반 목록 변경 (예: 스마트소프트웨어학과 3학년 → SAP반/SW반)
+  const classSelect = document.getElementById('selectClass');
+  function syncClassOptions() {
+    if (!deptSelect || !gradeSelect || !classSelect) return;
+    const prev = classSelect.value;
+    const classList = window.CampusData?.getClassList?.(deptSelect.value, gradeSelect.value) || ['A', 'B'];
+    classSelect.innerHTML = classList.map((cls) => `<option value="${cls}">${cls}반</option>`).join('');
+    if (classList.includes(prev)) classSelect.value = prev;
+  }
+
+  deptSelect?.addEventListener('change', () => {
+    syncGradeOptions();
+    syncClassOptions();
+  });
+  gradeSelect?.addEventListener('change', syncClassOptions);
+  syncGradeOptions();
+  syncClassOptions();
   localStorage.removeItem('campusUserProfile');
   sessionStorage.removeItem('campusUserProfile');
+
+  const gradeLabel = (grade) => (grade === '심화' ? '심화과정' : `${grade}학년`);
 
   function applyUserProfile(profile) {
     currentProfile = profile;
     const subtitleEl = document.querySelector('.subtitle');
     if (subtitleEl) {
-      subtitleEl.textContent = `${profile.dept} ${profile.grade}학년 · 수업, 공지, 과제와 학식을 한 화면에서 확인하세요.`;
+      subtitleEl.textContent = `${profile.dept} ${gradeLabel(profile.grade)} · 수업, 공지, 과제와 학식을 한 화면에서 확인하세요.`;
     }
 
-    // 선택한 반(A/B) 시간표 및 과제 반영
-    const targetClassBtn = document.querySelector(`[data-class="${profile.className}"]`);
-    if (targetClassBtn) targetClassBtn.click();
+    // 선택한 학과·학년·반 시간표 및 과제 반영
+    if (window.CampusFeatures?.setScheduleProfile) {
+      window.CampusFeatures.setScheduleProfile(profile);
+    }
 
     // 선택한 학과 교수님 랭킹 반영
     if (window.CampusFeatures?.renderProfessorRanking) {
@@ -74,7 +111,7 @@ function initializeUserSetup() {
 
     const statusEl = document.getElementById('classStatus');
     if (statusEl) {
-      statusEl.textContent = `${profile.dept} ${profile.grade}학년 ${profile.className}반`;
+      statusEl.textContent = `${profile.dept} ${gradeLabel(profile.grade)} ${profile.className}반`;
     }
   }
 
@@ -89,7 +126,9 @@ function initializeUserSetup() {
   if (openSetupBtn && overlay) {
     openSetupBtn.addEventListener('click', () => {
       document.getElementById('selectDept').value = currentProfile.dept;
+      syncGradeOptions();
       document.getElementById('selectGrade').value = currentProfile.grade;
+      syncClassOptions();
       document.getElementById('selectClass').value = currentProfile.className;
       overlay.classList.remove('fullscreen');
       overlay.classList.remove('hidden');

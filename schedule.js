@@ -3,6 +3,8 @@ window.CampusFeatures = window.CampusFeatures || {};
 // 날짜 기반 구조로 업그레이드되면서 저장소 키를 v2로 변경
 const ASSIGNMENT_STORAGE_KEY = 'campusAssignmentsData_v2';
 let currentClass = 'A';
+let currentDept = '스마트소프트웨어학과';
+let currentGrade = '1';
 
 // 오늘 날짜의 자정(00:00:00) Date 객체 반환
 function getTodayStart() {
@@ -94,7 +96,7 @@ function getBadgeInfo(diffDays) {
 }
 
 // 2. 주간 시간표 테이블 HTML 생성
-function buildWeeklyTimetable(rows, spans) {
+function buildWeeklyTimetable(rows, spans, cells = {}, editable = false) {
   const covered = new Set();
   let html = '';
   rows.forEach((row, rowIndex) => {
@@ -110,7 +112,17 @@ function buildWeeklyTimetable(rows, spans) {
       for (let index = 1; index < span; index += 1) {
         covered.add(`${rowIndex + index}-${colIndex}`);
       }
-      html += `<td ${span > 1 ? `rowspan="${span}"` : ''} class="${cell ? 'course' : ''}">${cell}</td>`;
+      const info = cells[key];
+      const profLine = info?.prof ? `<small class="course-prof">${escapeHTML(info.prof)}</small>` : '';
+      // 수업 칸: 누르면 삭제 / 빈 칸: 누르면 추가 폼에 요일·시간 자동 입력
+      // 수정 모드일 때만 클릭 가능
+      let dataAttr = '';
+      if (editable) {
+        dataAttr = info
+          ? `data-course-idx="${info.idx}" title="눌러서 삭제"`
+          : `data-slot-day="${colIndex}" data-slot-hour="${rowIndex + 9}" title="눌러서 이 시간에 수업 추가"`;
+      }
+      html += `<td ${span > 1 ? `rowspan="${span}"` : ''} class="${cell ? 'course' : 'empty-slot'}" ${dataAttr}>${cell}${profLine}</td>`;
     });
     html += '</tr>';
   });
@@ -153,8 +165,7 @@ function buildTodayTimetable(rows, spans) {
 }
 
 // 4. 메인 화면 가로 칩 형태의 오늘의 시간표 렌더링
-function renderTodayHorizontal(className) {
-  const data = window.CampusData?.classData?.[className];
+function renderTodayHorizontal(className, data) {
   if (!data) return;
 
   document.querySelectorAll('.class-title-text').forEach((el) => {
@@ -323,12 +334,205 @@ renderAssignments(currentClass);
 });
 });
 }
+// 5-1. 내 시간표 편집 (에브리타임처럼 수업 추가·삭제, localStorage 저장)
+const CUSTOM_TIMETABLE_KEY = 'campusCustomTimetable_v1';
+const DAY_NAMES = ['', '월', '화', '수', '목', '금'];
+
+function escapeHTML(text) {
+return String(text).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+}
+
+function loadCustomTimetables() {
+try {
+return JSON.parse(localStorage.getItem(CUSTOM_TIMETABLE_KEY)) || {};
+} catch (e) {
+console.warn('내 시간표 로드 실패:', e);
+return {};
+}
+}
+
+function saveCustomTimetables() {
+try {
+localStorage.setItem(CUSTOM_TIMETABLE_KEY, JSON.stringify(customTimetables));
+} catch (e) {
+console.warn('내 시간표 저장 실패:', e);
+}
+}
+
+let customTimetables = loadCustomTimetables();
+let isTimetableEditing = false; // '시간표 수정' 버튼을 눌렀을 때만 true
+const profileKey = (cls, dept = currentDept, grade = currentGrade) => `${dept}|${grade}|${cls}`;
+
+// 편집한 시간표가 있으면 그것을, 없으면 학과 기본 시간표를 사용
+function getCourses(cls, dept = currentDept, grade = currentGrade) {
+const custom = customTimetables[profileKey(cls, dept, grade)];
+if (custom) return custom.map((c) => ({ ...c }));
+return window.CampusData?.getDefaultCourses?.(dept, grade, cls) || [];
+}
+
+function getCurrentTimetable(cls) {
+const courses = getCourses(cls);
+const table = window.CampusData.makeTimetable(courses);
+// 사용자가 입력한 과목명은 화면에 넣기 전에 이스케이프
+table.rows = table.rows.map((row) => row.map((cell, idx) => (idx === 0 ? cell : escapeHTML(cell))));
+const label = `${currentDept} ${window.CampusData.gradeText(currentGrade)} ${cls}반`;
+const isCustom = Boolean(customTimetables[profileKey(cls)]);
+const hasDefault = (window.CampusData.getDefaultCourses(currentDept, currentGrade, cls) || []).length > 0;
+if (isCustom) table.note = `${label} · 내가 편집한 시간표입니다.`;
+else if (hasDefault) table.note = `2026학년도 2학기 ${label} 시간표 (08.06 기준)`;
+else table.note = `${label} 기본 시간표가 없어요. '시간표 수정' 버튼을 눌러 듣는 수업을 추가해 보세요.`;
+return { ...table, courses, isCustom };
+}
+
+function saveCourses(cls, courses) {
+customTimetables[profileKey(cls)] = courses.map(({ day, hour, span, name, prof }) => ({ day, hour, span, name, prof }));
+saveCustomTimetables();
+afterTimetableChange();
+}
+
+function afterTimetableChange() {
+renderClass(currentClass);
+window.CampusFeatures.renderProfessorRanking?.();
+}
+
+// 현재 학년(모든 반)의 시간표에 있는 교수님 목록 → 교수님 랭킹에서 사용
+function getGradeProfessors() {
+const classes = new Set(window.CampusData?.getClassList?.(currentDept, currentGrade) || []);
+Object.keys(customTimetables).forEach((key) => {
+const [dept, grade, cls] = key.split('|');
+if (dept === currentDept && grade === currentGrade) classes.add(cls);
+});
+const byProf = new Map();
+classes.forEach((cls) => {
+getCourses(cls).forEach((course) => {
+const prof = (course.prof || '').trim();
+if (!prof) return;
+if (!byProf.has(prof)) byProf.set(prof, new Set());
+byProf.get(prof).add(course.name);
+});
+});
+return Array.from(byProf, ([name, subjects]) => ({ name, subjects: Array.from(subjects) }));
+}
+
+// 시간표 아래 수업 추가 폼 렌더링 (시간표 탭에서만 표시)
+function renderTimetableEditor(isScheduleTab, isCustom) {
+const timetableEl = document.querySelector('#timetable');
+const cardEl = timetableEl?.closest('.card');
+if (!cardEl) return;
+
+// 수정 모드 전환 버튼 (시간표 위)
+let toggleBtn = cardEl.querySelector('#ttEditToggle');
+if (!toggleBtn) {
+toggleBtn = document.createElement('button');
+toggleBtn.type = 'button';
+toggleBtn.id = 'ttEditToggle';
+toggleBtn.className = 'outline timetable-edit-toggle';
+timetableEl.before(toggleBtn);
+toggleBtn.addEventListener('click', () => {
+isTimetableEditing = !isTimetableEditing;
+renderClass(currentClass);
+});
+}
+toggleBtn.style.display = isScheduleTab ? '' : 'none';
+toggleBtn.textContent = isTimetableEditing ? '✅ 수정 완료' : '✏️ 시간표 수정';
+toggleBtn.classList.toggle('primary', isTimetableEditing);
+toggleBtn.classList.toggle('outline', !isTimetableEditing);
+timetableEl.classList.toggle('editing', isTimetableEditing);
+
+let editor = cardEl.querySelector('#timetableEditor');
+if (!editor) {
+editor = document.createElement('form');
+editor.id = 'timetableEditor';
+editor.className = 'timetable-editor';
+const dayOptions = [1, 2, 3, 4, 5].map((d) => `<option value="${d}">${DAY_NAMES[d]}요일</option>`).join('');
+const startOptions = [9, 10, 11, 12, 13, 14, 15, 16, 17].map((h) => `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`).join('');
+const endOptions = [10, 11, 12, 13, 14, 15, 16, 17, 18].map((h) => `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`).join('');
+editor.innerHTML = `
+<strong class="timetable-editor-title">➕ 수업 추가</strong>
+<div class="timetable-editor-row">
+<input type="text" id="ttName" placeholder="과목명 (예: 자료구조)" maxlength="30" required />
+<input type="text" id="ttProf" placeholder="교수님 성함 (예: 김영수)" maxlength="15" />
+</div>
+<div class="timetable-editor-row">
+<select id="ttDay" aria-label="요일">${dayOptions}</select>
+<select id="ttStart" aria-label="시작 시간">${startOptions}</select>
+<span class="muted">~</span>
+<select id="ttEnd" aria-label="끝 시간">${endOptions}</select>
+<button type="submit" class="primary">추가</button>
+</div>
+<p class="muted timetable-editor-hint">시간표의 수업을 누르면 삭제, 빈 칸을 누르면 그 요일·시간이 자동으로 입력돼요. 교수님 성함을 넣으면 교수님 랭킹에서 평가할 수 있어요.</p>
+<button type="button" id="ttReset" class="light">기본 시간표로 되돌리기</button>
+`;
+cardEl.appendChild(editor);
+
+editor.querySelector('#ttStart').addEventListener('change', (e) => {
+const endSel = editor.querySelector('#ttEnd');
+if (Number(endSel.value) <= Number(e.target.value)) endSel.value = String(Number(e.target.value) + 1);
+});
+
+editor.addEventListener('submit', (e) => {
+e.preventDefault();
+const name = editor.querySelector('#ttName').value.trim();
+const prof = editor.querySelector('#ttProf').value.trim().replace(/\s*교수님$/, '');
+const day = Number(editor.querySelector('#ttDay').value);
+const hour = Number(editor.querySelector('#ttStart').value);
+const end = Number(editor.querySelector('#ttEnd').value);
+if (!name) return;
+if (end <= hour) {
+alert('끝 시간은 시작 시간보다 늦어야 해요.');
+return;
+}
+const courses = getCourses(currentClass);
+const clash = courses.find((c) => c.day === day && hour < c.hour + c.span && c.hour < end);
+if (clash) {
+alert(`${DAY_NAMES[day]}요일 ${clash.hour}시에 '${clash.name}' 수업과 시간이 겹쳐요.`);
+return;
+}
+courses.push({ day, hour, span: end - hour, name, prof });
+saveCourses(currentClass, courses);
+editor.querySelector('#ttName').value = '';
+editor.querySelector('#ttProf').value = '';
+});
+
+editor.querySelector('#ttReset').addEventListener('click', () => {
+if (!confirm('편집한 내용을 지우고 기본 시간표로 되돌릴까요?')) return;
+delete customTimetables[profileKey(currentClass)];
+saveCustomTimetables();
+afterTimetableChange();
+});
+
+// 시간표 칸 클릭: 수업 삭제 / 빈 칸은 추가 폼 자동 입력
+timetableEl.addEventListener('click', (e) => {
+const courseCell = e.target.closest('[data-course-idx]');
+if (courseCell) {
+const courses = getCourses(currentClass);
+const idx = Number(courseCell.dataset.courseIdx);
+const target = courses[idx];
+if (target && confirm(`'${target.name}' 수업을 시간표에서 삭제할까요?`)) {
+courses.splice(idx, 1);
+saveCourses(currentClass, courses);
+}
+return;
+}
+const slot = e.target.closest('[data-slot-day]');
+if (slot) {
+editor.querySelector('#ttDay').value = slot.dataset.slotDay;
+editor.querySelector('#ttStart').value = slot.dataset.slotHour;
+editor.querySelector('#ttEnd').value = String(Number(slot.dataset.slotHour) + 1);
+editor.querySelector('#ttName').focus();
+}
+});
+}
+editor.style.display = isScheduleTab && isTimetableEditing ? 'flex' : 'none';
+editor.querySelector('#ttReset').style.display = isCustom ? '' : 'none';
+}
+
 // 6. 반(A/B) 선택에 따른 시간표 및 과제 전체 갱신
 function renderClass(className) {
 currentClass = className;
-const data = window.CampusData?.classData?.[className];
+const data = getCurrentTimetable(className);
 if (!data) return;
-renderTodayHorizontal(className);
+renderTodayHorizontal(className, data);
 const mainEl = document.querySelector('main');
 const isFullScheduleTab = mainEl && mainEl.classList.contains('single');
 const timetableCard = document.querySelector('#timetable')?.closest('.card');
@@ -344,31 +548,64 @@ const statusEl = document.querySelector('#classStatus');
 if (statusEl) {
 const currentText = statusEl.textContent;
 if (currentText.includes('학년')) {
-statusEl.textContent = currentText.replace(/[AB]반$/, `${className}반`);
+statusEl.textContent = currentText.replace(/\S+반$/, `${className}반`);
 } else {
 statusEl.textContent = `현재 ${className}반 정보를 보고 있어요.`;
 }
 }
 const noteEl = document.querySelector('#classNote');
 if (noteEl) noteEl.textContent = data.note;
+// 시간표 탭을 벗어나면 수정 모드 자동 종료
+if (!isFullScheduleTab) isTimetableEditing = false;
 const timetableEl = document.querySelector('#timetable');
 if (timetableEl) {
 timetableEl.innerHTML = isFullScheduleTab
-? buildWeeklyTimetable(data.rows, data.spans)
+? buildWeeklyTimetable(data.rows, data.spans, data.cells, isTimetableEditing)
 : buildTodayTimetable(data.rows, data.spans);
 }
+renderTimetableEditor(isFullScheduleTab, data.isCustom);
 renderAssignments(className);
 document.querySelectorAll('[data-class]').forEach((button) => {
 button.classList.toggle('active', button.dataset.class === className);
 });
 }
+// 7. 상단 반 전환 버튼을 학과·학년에 맞게 다시 만들기 (예: 3학년 → SAP반/SW반)
+function renderClassButtons() {
+const switchEl = document.querySelector('.class-switch');
+if (!switchEl) return;
+switchEl.querySelectorAll('[data-class]').forEach((btn) => btn.remove());
+const setupBtn = switchEl.querySelector('#openSetupBtn');
+const classList = window.CampusData?.getClassList?.(currentDept, currentGrade) || ['A', 'B'];
+classList.forEach((cls) => {
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'light';
+btn.dataset.class = cls;
+btn.textContent = `${cls}반`;
+switchEl.insertBefore(btn, setupBtn);
+});
+}
+// 8. 소속(학과·학년·반) 변경 시 시간표 갱신
+function setScheduleProfile(profile) {
+currentDept = profile.dept;
+currentGrade = profile.grade;
+renderClassButtons();
+const classList = window.CampusData?.getClassList?.(currentDept, currentGrade) || ['A', 'B'];
+renderClass(classList.includes(profile.className) ? profile.className : classList[0]);
+}
 function initializeClassSchedule() {
-document.querySelectorAll('[data-class]').forEach((button) => {
-button.addEventListener('click', () => renderClass(button.dataset.class));
+// 반 버튼은 다시 만들어지므로 이벤트 위임으로 처리
+document.addEventListener('click', (e) => {
+const button = e.target.closest('.class-switch [data-class]');
+if (button) renderClass(button.dataset.class);
 });
 document.querySelectorAll('#bottomNav button').forEach((navBtn) => {
 navBtn.addEventListener('click', () => setTimeout(() => renderClass(currentClass), 0));
 });
+renderClassButtons();
 renderClass('A');
 }
 window.CampusFeatures.initializeClassSchedule = initializeClassSchedule;
+window.CampusFeatures.setScheduleProfile = setScheduleProfile;
+window.CampusFeatures.getGradeProfessors = getGradeProfessors;
+window.CampusFeatures.getScheduleProfile = () => ({ dept: currentDept, grade: currentGrade, className: currentClass });

@@ -149,6 +149,87 @@ td:first-child {
     background: #eaf4ff;
 }
 
+/* 내 시간표 편집 (수업 칸 클릭 → 삭제, 빈 칸 클릭 → 추가 폼 자동 입력) */
+#timetable td[data-course-idx],
+#timetable td[data-slot-day] {
+    cursor: pointer;
+}
+
+#timetable td[data-course-idx]:hover {
+    background: #d6e9ff;
+}
+
+#timetable td[data-slot-day]:hover {
+    background: #f1f7fe;
+}
+
+.timetable-edit-toggle {
+    margin-bottom: 10px;
+    font-size: .85rem;
+    padding: 7px 12px;
+}
+
+#timetable.editing {
+    outline: 2px dashed #93c5fd;
+    outline-offset: 3px;
+}
+
+.course-prof {
+    display: block;
+    margin-top: 3px;
+    font-weight: 500;
+    font-size: .76rem;
+    color: var(--muted);
+}
+
+.timetable-editor {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timetable-editor-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.timetable-editor input,
+.timetable-editor select {
+    padding: 9px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+    font-size: .88rem;
+    background: #fff;
+    color: var(--ink);
+}
+
+.timetable-editor input {
+    flex: 1;
+    min-width: 140px;
+}
+
+.timetable-editor-title {
+    color: var(--navy);
+}
+
+.timetable-editor-hint {
+    margin: 0;
+    font-size: .8rem;
+}
+
+.timetable-editor #ttReset {
+    align-self: flex-start;
+    border: 1px solid #bed3e8;
+    font-size: .82rem;
+    padding: 7px 12px;
+}
+
 ul {
     list-style: none;
     padding: 0;
