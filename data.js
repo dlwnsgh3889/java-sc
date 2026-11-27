@@ -1,11 +1,14 @@
 window.CampusData = window.CampusData || {};
+window.CampusFeatures = window.CampusFeatures || {};
 
+// 1. 학식 메뉴 데이터
 window.CampusData.meals = {
   breakfast: { title: '조식 · 08:00 ~ 09:00', main: '흰쌀밥 · 북엇국 · 계란말이', side: '김치 · 샐러드 · 우유' },
   lunch: { title: '중식 · 11:30 ~ 13:30', main: '돈까스 정식 · 김치찌개 · 잡곡밥', side: '샐러드바 · 깍두기 · 후식' },
   dinner: { title: '석식 · 17:00 ~ 18:30', main: '제육볶음 · 된장국 · 흰쌀밥', side: '콩나물무침 · 김치 · 과일' }
 };
 
+// 2. 반별 시간표 및 과제 데이터
 window.CampusData.classData = {
   A: {
     note: '첨부한 2026년 2학기 A반 실제 시간표를 반영했습니다.',
@@ -46,3 +49,24 @@ window.CampusData.classData = {
     ]
   }
 };
+
+// 3. 학식 탭 전환 기능
+function showMeal(mealKey) {
+  const meal = window.CampusData?.meals?.[mealKey];
+  const panel = document.querySelector('#mealPanel');
+  if (!meal || !panel) return;
+
+  panel.innerHTML = `<strong>${meal.title}</strong><p>${meal.main}</p><p>반찬: ${meal.side}</p>`;
+  document.querySelectorAll('.meal-tab').forEach((button) => {
+    button.classList.toggle('active', button.dataset.meal === mealKey);
+  });
+}
+
+function initializeMealMenu() {
+  document.querySelectorAll('.meal-tab').forEach((button) => {
+    button.addEventListener('click', () => showMeal(button.dataset.meal));
+  });
+  showMeal('breakfast');
+}
+
+window.CampusFeatures.initializeMealMenu = initializeMealMenu;
